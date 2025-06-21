@@ -4,12 +4,17 @@ const AssignmentModel = {
   // Create a new assignment
   async create({ lessonId, title, description, deadline }) {
     try {
+      console.log('=== ASSIGNMENT MODEL CREATE DEBUG ===');
+      console.log('Received parameters:', { lessonId, title, description, deadline });
+      
       const { rows } = await query(
         `INSERT INTO assignments (lesson_id, title, description, deadline)
          VALUES ($1, $2, $3, $4)
          RETURNING *`,
         [lessonId, title, description, deadline]
       );
+      
+      console.log('Created assignment in database:', rows[0]);
       return rows[0];
     } catch (error) {
       console.error("Error creating assignment:", error);
@@ -21,7 +26,7 @@ const AssignmentModel = {
   async getById(id) {
     try {
       const { rows } = await query(
-        `SELECT a.*, l.title as lesson_title, m.title as module_title, c.title as course_title
+        `SELECT a.*, l.title as lesson_title, m.title as module_title, c.title as course_title, c.id as course_id
          FROM assignments a
          JOIN lessons l ON a.lesson_id = l.id
          JOIN modules m ON l.module_id = m.id
@@ -181,7 +186,7 @@ const AssignmentModel = {
            s.graded_at,
            u.name as user_name,
            u.email as user_email
-         FROM assignment_submissions s
+         FROM submissions s
          JOIN users u ON s.user_id = u.id
          WHERE s.assignment_id = $1
          ORDER BY s.submitted_at DESC`,
